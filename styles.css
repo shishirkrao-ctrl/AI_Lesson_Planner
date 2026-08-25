@@ -1,0 +1,665 @@
+/* =========================================================================
+   syllabus-hours — design system
+   Palette: "Ice & Butter" — deep navy / clean white / soft cobalt /
+   butter yellow / ice blue. Cool blues carry the interface; butter yellow
+   is spent in one place (the brand mark, the active step, the console
+   prompt) as the single warm signature against an otherwise icy palette.
+   Visual concept: the app behaves like a compiler pipeline
+   (clean_text -> split_into_topics -> extract_topics -> process_syllabus) —
+   kept alive through monospace stage labels and a dark "console" panel
+   during generation.
+   ========================================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+:root {
+  /* Ice & Butter */
+  --sh-deep-navy: #2F4860;
+  --sh-clean-white: #FFFFFF;
+  --sh-soft-cobalt: #7DA7D9;
+  --sh-butter-yellow: #FFF7CC;
+  --sh-ice-blue: #DCEEFF;
+
+  --sh-bg: var(--sh-ice-blue);
+  --sh-surface: var(--sh-clean-white);
+  --sh-surface-dark: var(--sh-deep-navy);
+  --sh-surface-dark-2: #3D5C7B;
+
+  --sh-ink: #223648;
+  --sh-muted: #5B7286;
+  --sh-muted-2: #8CA3B5;
+  --sh-border: #C9E0F5;
+  --sh-border-dark: #3F5C79;
+
+  --sh-primary: var(--sh-deep-navy);
+  --sh-primary-hover: #223448;
+  --sh-primary-tint: #EAF4FC;
+
+  --sh-cobalt-tint: #EAF2FB;
+  --sh-cobalt-border: #B7CFE8;
+  --sh-butter-ink: #7A6A1D;
+
+  --sh-red: #C6413F;
+  --sh-red-tint: #FBEAEA;
+
+  --sh-display: 'Space Grotesk', ui-sans-serif, sans-serif;
+  --sh-sans: 'Plus Jakarta Sans', -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --sh-mono: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --sh-radius: 12px;
+  --sh-radius-sm: 6px;
+}
+
+/* ---------- base canvas ---------- */
+[data-testid="stAppViewContainer"] {
+  background: var(--sh-bg);
+}
+[data-testid="stHeader"] {
+  background: transparent;
+}
+.main .block-container {
+  max-width: 1080px;
+  padding-top: 2rem;
+  padding-bottom: 4rem;
+}
+html, body, [data-testid="stAppViewContainer"] * {
+  font-family: var(--sh-sans);
+  color: var(--sh-ink);
+}
+code, pre {
+  font-family: var(--sh-mono);
+}
+/* Streamlit's built-in icons (sidebar collapse arrow, expander chevrons, etc.)
+   render as ligature text in a Material Symbols font -- the blanket rule
+   above must not override that font-family or the ligature name leaks as
+   literal text (e.g. "keyboard_double_arrow_left"). */
+[data-testid="stIconMaterial"] {
+  font-family: 'Material Symbols Rounded' !important;
+  color: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+/* ---------- top step tracker (pill row, no sidebar) ---------- */
+/* Mirrors the React/Next.js frontend's page.tsx: a flat row of step pills
+   above the title instead of a sidebar tracker. No [data-testid="stSidebar"]
+   is used anywhere in this layout -- hide the (now unused) collapse arrow
+   Streamlit still renders in the top-left corner by default. */
+[data-testid="stSidebarCollapsedControl"] {
+  display: none !important;
+}
+.sh-steps-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+.sh-step-pill {
+  font-family: var(--sh-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--sh-border);
+  background: var(--sh-surface);
+  color: var(--sh-muted-2);
+}
+.sh-step-pill-active {
+  background: var(--sh-butter-yellow);
+  border-color: #E8D98A;
+  color: var(--sh-butter-ink);
+  font-weight: 600;
+}
+.sh-step-pill-done {
+  background: var(--sh-cobalt-tint);
+  border-color: var(--sh-cobalt-border);
+  color: var(--sh-ink);
+}
+.sh-restart-link {
+  margin-left: auto;
+  font-family: var(--sh-mono);
+  font-size: 0.72rem;
+  color: var(--sh-muted-2);
+}
+[data-testid="stSidebar"] { display: none; }
+
+/* ---------- cobalt-tint metric boxes (matches ResultsCard.tsx) ---------- */
+.sh-metric-tint {
+  background: var(--sh-cobalt-tint);
+  border-radius: var(--sh-radius-sm);
+  padding: 0.85rem 1rem;
+  text-align: center;
+}
+.sh-metric-tint .sh-metric-label {
+  font-family: var(--sh-mono);
+  font-size: 0.72rem;
+  color: var(--sh-muted);
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+.sh-metric-tint .sh-metric-value {
+  font-family: var(--sh-display);
+  font-weight: 600;
+  font-size: 1.35rem;
+  color: var(--sh-deep-navy);
+}
+
+/* ---------- header ---------- */
+.sh-title {
+  font-family: var(--sh-display);
+  font-weight: 700;
+  font-size: 2.15rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.5rem 0;
+  color: var(--sh-ink);
+}
+.sh-subtitle {
+  font-size: 0.98rem;
+  color: var(--sh-muted);
+  max-width: 640px;
+  margin: 0 0 1.75rem 0;
+  line-height: 1.55;
+}
+
+/* ---------- step pill bar (top of page, no sidebar) ---------- */
+.sh-step-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.9rem;
+}
+.sh-step-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.32rem 0.75rem;
+  border-radius: 999px;
+  font-family: var(--sh-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.sh-step-pill-active {
+  background: var(--sh-butter-yellow);
+  border-color: #C9B65C;
+  color: var(--sh-butter-ink);
+}
+.sh-step-pill-done {
+  background: var(--sh-cobalt-tint);
+  border-color: var(--sh-cobalt-border);
+  color: var(--sh-ink);
+}
+.sh-step-pill-pending {
+  background: var(--sh-surface);
+  border-color: var(--sh-border);
+  color: var(--sh-muted-2);
+}
+
+/* ---------- tinted metric cards (matches the React results screen) ---------- */
+.sh-metric-tint {
+  background: var(--sh-cobalt-tint);
+  border-radius: var(--sh-radius-sm);
+  padding: 0.85rem 1rem;
+  text-align: center;
+}
+.sh-metric-tint .sh-metric-label {
+  margin-bottom: 0.2rem;
+}
+
+/* ---------- sidebar (unused in this layout, kept for safety) ---------- */
+[data-testid="stSidebar"] {
+  background: var(--sh-surface-dark);
+  border-right: 1px solid var(--sh-border-dark);
+}
+[data-testid="stSidebar"] * {
+  color: #EAF1F8;
+}
+[data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+  gap: 0.4rem;
+}
+
+.sh-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.25rem 0 1.25rem 0;
+  border-bottom: 1px solid var(--sh-border-dark);
+  margin-bottom: 1.1rem;
+}
+.sh-brand-mark {
+  font-family: var(--sh-mono);
+  color: var(--sh-butter-yellow);
+  font-size: 1.3rem;
+  line-height: 1;
+}
+.sh-brand-name {
+  font-family: var(--sh-display);
+  font-weight: 600;
+  font-size: 1.02rem;
+  color: #F7FAFD;
+  letter-spacing: -0.01em;
+}
+.sh-brand-tag {
+  font-size: 0.74rem;
+  color: #91A6B8;
+  margin-top: 0.1rem;
+}
+
+.sh-tracker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-bottom: 1.4rem;
+}
+.sh-step {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--sh-radius-sm);
+  font-family: var(--sh-mono);
+  font-size: 0.82rem;
+}
+.sh-step-mark {
+  width: 2.4em;
+  color: #75899C;
+}
+.sh-step-label {
+  color: #AEC0CF;
+}
+.sh-step-active {
+  background: var(--sh-surface-dark-2);
+}
+.sh-step-active .sh-step-mark { color: var(--sh-butter-yellow); }
+.sh-step-active .sh-step-label { color: #F7FAFD; font-weight: 600; }
+.sh-step-done .sh-step-mark { color: var(--sh-soft-cobalt); }
+.sh-step-done .sh-step-label { color: #CBDBE7; }
+
+.sh-stat-block {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1.4rem;
+}
+.sh-stat {
+  flex: 1;
+  border: 1px solid var(--sh-border-dark);
+  border-radius: var(--sh-radius-sm);
+  padding: 0.5rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.sh-stat-label {
+  font-family: var(--sh-mono);
+  font-size: 0.68rem;
+  color: #85A0AF;
+  text-transform: lowercase;
+}
+.sh-stat-value {
+  font-family: var(--sh-mono);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #F7FAFD;
+}
+
+[data-testid="stSidebar"] .stButton > button {
+  background: transparent;
+  border: 1px solid var(--sh-border-dark);
+  color: #CBDBE7;
+  font-family: var(--sh-mono);
+  font-size: 0.8rem;
+  border-radius: var(--sh-radius-sm);
+}
+[data-testid="stSidebar"] .stButton > button:hover {
+  border-color: var(--sh-butter-yellow);
+  color: var(--sh-butter-yellow);
+}
+
+/* ---------- cards ---------- */
+.sh-card {
+  background: var(--sh-surface);
+  border: 1px solid var(--sh-border);
+  border-radius: var(--sh-radius);
+  padding: 1.5rem 1.6rem 1.65rem 1.6rem;
+  margin-bottom: 1.25rem;
+}
+.sh-card-title {
+  font-family: var(--sh-display);
+  font-weight: 600;
+  font-size: 1.08rem;
+  margin-bottom: 0.3rem;
+  color: var(--sh-ink);
+}
+.sh-hint {
+  font-size: 0.86rem;
+  color: var(--sh-muted);
+  margin: 0.15rem 0 0.9rem 0;
+}
+.sh-file-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+.sh-file-chip {
+  font-family: var(--sh-mono);
+  font-size: 0.8rem;
+  background: var(--sh-cobalt-tint);
+  color: #2A567F;
+  border: 1px solid var(--sh-cobalt-border);
+  border-radius: 999px;
+  padding: 0.32rem 0.75rem;
+}
+.sh-file-chip em {
+  font-style: normal;
+  color: #5482AD;
+  margin-left: 0.4rem;
+}
+
+.sh-unit-label {
+  margin-bottom: 0.3rem;
+}
+.sh-unit-name {
+  font-family: var(--sh-mono);
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--sh-ink);
+}
+.sh-unit-count {
+  font-weight: 400;
+  color: var(--sh-muted-2);
+  font-size: 0.72rem;
+  margin-top: 0.15rem;
+}
+.sh-total {
+  font-family: var(--sh-mono);
+  font-size: 0.85rem;
+  color: var(--sh-muted);
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--sh-border);
+}
+.sh-total b { color: var(--sh-ink); }
+
+/* ---------- console (generation log) ---------- */
+.sh-console {
+  background: var(--sh-surface-dark);
+  border: 1px solid var(--sh-border-dark);
+  border-radius: var(--sh-radius-sm);
+  padding: 0.9rem 1rem;
+  margin-top: 0.75rem;
+  font-family: var(--sh-mono);
+  font-size: 0.82rem;
+}
+.sh-console-line {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.18rem 0;
+  color: #CBDBE7;
+}
+.sh-console-prompt { color: var(--sh-butter-yellow); }
+.sh-console-text { flex: 1; }
+.sh-console-status { color: #75899C; }
+.sh-console-ok .sh-console-status { color: var(--sh-soft-cobalt); }
+.sh-console-running .sh-console-status { color: var(--sh-butter-yellow); }
+.sh-console-error .sh-console-text,
+.sh-console-error .sh-console-status { color: #F2A6A5; }
+
+/* ---------- error banner ---------- */
+.sh-error {
+  font-family: var(--sh-sans);
+  font-size: 0.88rem;
+  background: var(--sh-red-tint);
+  border: 1px solid #F0C4C3;
+  color: #8F2E2C;
+  border-radius: var(--sh-radius-sm);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.1rem;
+}
+
+/* ---------- metrics ---------- */
+[data-testid="stMetric"],
+.sh-metric {
+  background: var(--sh-surface);
+  border: 1px solid var(--sh-border);
+  border-radius: var(--sh-radius-sm);
+  padding: 0.85rem 1rem;
+}
+.sh-metric-label {
+  font-family: var(--sh-mono);
+  font-size: 0.72rem;
+  color: var(--sh-muted-2);
+  text-transform: lowercase;
+  margin-bottom: 0.25rem;
+}
+.sh-metric-value {
+  font-family: var(--sh-mono);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--sh-ink);
+}
+
+/* ---------- footer ---------- */
+.sh-footer {
+  font-family: var(--sh-mono);
+  font-size: 0.74rem;
+  color: var(--sh-muted-2);
+  text-align: center;
+  margin-top: 2rem;
+}
+
+/* ---------- native widget overrides ---------- */
+.stButton > button, .stDownloadButton > button {
+  font-family: var(--sh-mono);
+  font-weight: 500;
+  font-size: 0.85rem;
+  border-radius: var(--sh-radius-sm);
+  border: 1px solid var(--sh-border);
+  color: var(--sh-ink);
+  background: var(--sh-surface);
+  padding: 0.5rem 1.1rem;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+.stButton > button:hover, .stDownloadButton > button:hover {
+  border-color: var(--sh-primary);
+  color: var(--sh-primary);
+  transform: translateY(-1px);
+}
+.stButton > button[kind="primary"],
+.stButton > button[data-testid="stBaseButton-primary"] {
+  background: var(--sh-primary);
+  border-color: var(--sh-primary);
+  color: #FFFFFF;
+}
+.stButton > button[kind="primary"]:hover,
+.stButton > button[data-testid="stBaseButton-primary"]:hover {
+  background: var(--sh-primary-hover);
+  border-color: var(--sh-primary-hover);
+  color: #FFFFFF;
+}
+.stButton > button[kind="primary"],
+.stButton > button[data-testid="stBaseButton-primary"],
+.stButton > button[kind="primary"] *,
+.stButton > button[data-testid="stBaseButton-primary"] *,
+.stButton > button[kind="primary"]:disabled,
+.stButton > button[data-testid="stBaseButton-primary"]:disabled {
+  color: #FFFFFF !important;
+}
+.stButton > button:focus-visible, .stDownloadButton > button:focus-visible {
+  outline: 2px solid var(--sh-primary);
+  outline-offset: 1px;
+}
+
+[data-testid="stFileUploaderDropzone"] {
+  background: var(--sh-cobalt-tint);
+  border: 1.5px dashed var(--sh-cobalt-border);
+  border-radius: var(--sh-radius-sm);
+}
+/* Relabel the native "Browse files" button as "Upload" with guaranteed
+   contrast, instead of force-coloring its text (which previously matched
+   the button's own background and made it unreadable). */
+[data-testid="stFileUploaderDropzone"] button:not(:has(svg)) {
+  position: relative;
+  background: var(--sh-primary);
+  border: none;
+  border-radius: var(--sh-radius-sm);
+  min-width: 6.5rem;
+  padding: 0.55rem 1.25rem;
+}
+[data-testid="stFileUploaderDropzone"] button:not(:has(svg)):hover {
+  background: var(--sh-primary-hover);
+}
+[data-testid="stFileUploaderDropzone"] button:not(:has(svg)) * {
+  visibility: hidden;
+}
+[data-testid="stFileUploaderDropzone"] button:not(:has(svg))::after {
+  content: "Upload";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  visibility: visible;
+  font-family: var(--sh-mono);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+[data-testid="stNumberInput"] input {
+  font-family: var(--sh-mono);
+  border-radius: var(--sh-radius-sm);
+}
+
+[data-testid="stExpander"] {
+  border: 1px solid var(--sh-border);
+  border-radius: var(--sh-radius-sm);
+  background: var(--sh-surface);
+}
+[data-testid="stExpander"] summary {
+  font-family: var(--sh-display);
+  font-weight: 500;
+  font-size: 0.92rem;
+}
+
+[data-testid="stDataFrame"] {
+  border: 1px solid var(--sh-border);
+  border-radius: var(--sh-radius-sm);
+}
+
+::selection { background: var(--sh-cobalt-tint); }
+/* ============================================================
+   REMOVE THE EMPTY WHITE BOXES
+   ============================================================ */
+
+/* Removes the large white container above the upload section */
+.stElementContainer:has(> div:empty) {
+    display: none !important;
+}
+
+/* Remove any empty markdown/html containers */
+[data-testid="stMarkdownContainer"]:empty,
+.element-container:has(.stMarkdown:empty) {
+    display: none !important;
+}
+
+/* Remove blank Streamlit blocks */
+[data-testid="stVerticalBlock"] > div:empty {
+    display: none !important;
+}
+
+/* Remove empty bordered card wrappers (ghost containers with no real
+   content). Every real card in this app always renders a .sh-card-title
+   as its first element, so any bordered wrapper without one is a stray
+   empty box and can be hidden safely. */
+[data-testid="stVerticalBlockBorderWrapper"]:not(:has(.sh-card-title)) {
+    display: none !important;
+}
+
+
+/* ============================================================
+   FILE UPLOADER
+   The dropzone and the uploaded-file row both sit on a LIGHT
+   (cobalt-tint) background, so their text stays dark ink in every
+   state (default, selected, focused, hover, post-upload). Nothing
+   else about the uploader (background, borders, icons, button
+   styling, spacing) is touched.
+   ============================================================ */
+
+[data-testid="stFileUploaderDropzone"] small,
+[data-testid="stFileUploaderDropzone"] span,
+[data-testid="stFileUploaderDropzone"] p,
+[data-testid="stFileUploaderDropzone"] div,
+[data-testid="stFileUploader"] [data-testid="stFileUploaderFileName"],
+[data-testid="stFileUploader"] [data-testid="stFileUploaderFileData"],
+[data-testid="stFileUploader"] [data-testid="stFileUploaderFileData"] *,
+[data-testid="stFileUploader"] [data-testid^="stFileUploaderFile"],
+[data-testid="stFileUploader"] [data-testid^="stFileUploaderFile"] * {
+    color: var(--sh-ink) !important;
+    opacity: 1 !important;
+}
+
+/* The "Browse files" button itself keeps white text (it sits on the
+   dark navy button background set above) -- restore that separately
+   since it would otherwise get swept up by the dark-ink rule above. */
+[data-testid="stFileUploaderDropzone"] button:not(:has(svg))::after {
+    color: #FFFFFF !important;
+}
+
+
+/* ============================================================
+   NUMBER INPUTS
+   These boxes sit on the light card surface, so text is dark ink.
+   ============================================================ */
+
+[data-testid="stNumberInput"] input {
+    color: var(--sh-ink) !important;
+    -webkit-text-fill-color: var(--sh-ink) !important;
+    font-family: var(--sh-mono);
+}
+
+
+/* Plus and minus buttons */
+[data-testid="stNumberInput"] button {
+    color: var(--sh-ink) !important;
+}
+
+
+/* Placeholder */
+[data-testid="stNumberInput"] input::placeholder {
+    color: var(--sh-muted-2) !important;
+}
+
+/* Higher-specificity fallback in case Streamlit's own theme variables
+   win the cascade over the testid selector above */
+.stNumberInput input[type="number"],
+[data-testid="stNumberInput"] [data-baseweb="input"] input {
+    color: var(--sh-ink) !important;
+    -webkit-text-fill-color: var(--sh-ink) !important;
+}
+
+/* ============================================================
+   UNIT HOUR BOXES — ALIGNMENT
+   Streamlit already stretches every column in a row to the height of
+   the tallest one, but the label + input inside each column still
+   stack from the top -- so a unit name that wraps to two lines pushes
+   its number box down relative to columns with a one-line name.
+   Turning each of these specific columns into a bottom-aligned flex
+   column fixes that for any name length, without touching other
+   column rows (metrics, downloads, etc.) elsewhere in the app.
+   ============================================================ */
+
+[data-testid="stColumn"]:has(> [data-testid="stVerticalBlock"] .sh-unit-label) {
+    display: flex;
+}
+[data-testid="stColumn"]:has(> [data-testid="stVerticalBlock"] .sh-unit-label) > [data-testid="stVerticalBlock"] {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: 100%;
+}

@@ -1,0 +1,12 @@
+streamlit
+pandas
+google-genai
+pdfplumber
+pypdf
+langchain-core
+langchain-text-splitters
+langchain-community
+langchain-huggingface
+chromadb
+sentence-transformers
+reportlab
